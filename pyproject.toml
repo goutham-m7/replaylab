@@ -1,0 +1,37 @@
+[project]
+name = "replaylab"
+version = "0.1.0"
+description = "Local time-travel debugging for LLM apps and agents"
+authors = [
+    { name = "Goutham Madineni", email = "151193576+goutham-m7@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.5",
+    "httpx>=0.28.1",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+replaylab = "replaylab.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.5",
+]
