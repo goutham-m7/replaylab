@@ -38,6 +38,8 @@ def now():
 
 class Store:
     def __init__(self, path: str | Path):
+        if str(path) == ":memory:":
+            raise ValueError("Store requires a persistent SQLite file, not :memory:")
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as conn:

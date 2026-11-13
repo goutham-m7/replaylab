@@ -48,7 +48,7 @@ class Fork:
                 raise ValueError("params must be an object without model/messages/stream")
         if "state_after" in self.changes and not isinstance(self.changes["state_after"], dict):
             raise ValueError("state_after must be an object")
-        canonical(self.changes)
+        object.__setattr__(self, "changes", clone(self.changes))
 
     def validate_kind(self, kind):
         if ("tool_result" in self.changes) != (kind == "tool"):
@@ -148,6 +148,8 @@ class Session:
                     self.state = clone(cached["state_after"])
                 else:
                     output = clone(execute(request["payload"]))
+            if not isinstance(self.state, dict):
+                raise TypeError("Session state must be a JSON object")
             canonical(self.state)
             return output
         except Exception as exc:
@@ -157,6 +159,8 @@ class Session:
             self.in_step = False
             try:
                 after = clone(self.state)
+                if not isinstance(after, dict):
+                    raise TypeError("Session state must be a JSON object")
             except (TypeError, ValueError):
                 # Preserve the failure trace even when a tool violated the JSON contract.
                 self.state = after = before
@@ -185,6 +189,8 @@ class Engine:
         if inspect.iscoroutinefunction(workflow):
             raise TypeError("async workflows are not supported")
         input = clone(input)
+        if source is not None and self.store.get_run(source)["status"] == "running":
+            raise ValueError("Cannot branch or replay a running source")
         source_steps = self.store.steps(source) if source else []
         if fork is not None:
             if fork.position > len(source_steps):

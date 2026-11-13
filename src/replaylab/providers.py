@@ -38,6 +38,7 @@ class OpenAIProvider:
             body = response.json()
             if (not isinstance(body, dict) or not isinstance(body.get("choices"), list)
                     or not body["choices"]
+                    or not isinstance(body["choices"][0], dict)
                     or not isinstance(body["choices"][0].get("message"), dict)):
                 raise ValueError("Provider returned no chat completion message")
             return body
