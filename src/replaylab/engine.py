@@ -232,6 +232,14 @@ class Engine:
             required = len(source_steps) if mode == "replay" else (fork.position if fork else 0)
             if session.position < required:
                 raise ReplayDivergence("Workflow ended before consuming the recorded prefix")
+            if mode == "replay":
+                recorded = self.store.get_run(source)
+                if recorded["status"] != "completed":
+                    raise ReplayDivergence(
+                        "Source failed but replay workflow returned successfully"
+                    )
+                if canonical(output) != canonical(recorded["output"]):
+                    raise ReplayDivergence("Workflow output differs from the recorded result")
             self.store.finish_run(run_id, "completed", output, None)
         except Exception as exc:
             self.store.finish_run(
