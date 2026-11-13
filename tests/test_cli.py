@@ -35,8 +35,16 @@ def test_cli_records_failure_and_forks_from_json_edit(tmp_path):
     original = cli("run", "research", "--input", '{"question":"offline?"}', "--db", db)
     assert original.returncode == 1
     run_id = json.loads(original.stdout)["id"]
-    fork = cli("fork", run_id, "--step", "4", "--edit",
-               '{"prompt":"Cite only source IDs from supplied evidence"}', "--db", db)
+    fork = cli(
+        "fork",
+        run_id,
+        "--step",
+        "4",
+        "--edit",
+        '{"prompt":"Cite only source IDs from supplied evidence"}',
+        "--db",
+        db,
+    )
     assert fork.returncode == 0, fork.stderr
     assert json.loads(fork.stdout)["status"] == "completed"
     replay = cli("replay", run_id, "--db", db)

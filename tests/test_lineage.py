@@ -26,8 +26,9 @@ def test_fork_of_fork_retains_intervention_and_can_override_it(tmp_path):
     client = ChatClient(MockProvider())
 
     def flow(text):
-        return client.create(model="mock", messages=[{"role": "user", "content": text}],
-                             temperature=0)
+        return client.create(
+            model="mock", messages=[{"role": "user", "content": text}], temperature=0
+        )
 
     original = engine.run(flow, "original")
     first = engine.run(flow, "original", source=original, fork=Fork(1, {"prompt": "edited"}))
@@ -57,8 +58,9 @@ def test_tool_override_lineage_restores_state_in_descendant_prefix(tmp_path):
         return last(first(value))
 
     original = engine.run(flow, 1)
-    forked = engine.run(flow, 1, source=original, fork=Fork(1, {
-        "tool_result": 9, "state_after": {"n": 9}}))
+    forked = engine.run(
+        flow, 1, source=original, fork=Fork(1, {"tool_result": 9, "state_after": {"n": 9}})
+    )
     descendant = engine.run(flow, 1, source=forked, fork=Fork(2, {"tool_result": 25}))
     assert store.get_run(descendant)["output"] == 25
     assert store.steps(descendant)[0]["state_after"] == {"n": 9}

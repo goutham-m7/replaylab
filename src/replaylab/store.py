@@ -131,7 +131,9 @@ class Store:
         columns = ",".join(row)
         placeholders = ",".join("?" for _ in row)
         with self.connect() as conn:
-            conn.execute(f"INSERT INTO steps ({columns}) VALUES ({placeholders})", tuple(row.values()))
+            conn.execute(
+                f"INSERT INTO steps ({columns}) VALUES ({placeholders})", tuple(row.values())
+            )
             if step["error"] is None and step["origin"] == "executed":
                 conn.execute(
                     "INSERT OR REPLACE INTO cache VALUES (?, ?, ?)",

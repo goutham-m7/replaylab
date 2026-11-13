@@ -19,7 +19,12 @@ def test_demo_fails_at_four_then_repairs_without_repeating_prefix(tmp_path):
     assert result["original_provider_calls"] == 3
     assert result["fork_provider_calls"] == 1
     assert [r["status"] for r in result["diff"]["steps"]] == [
-        "unchanged", "unchanged", "unchanged", "changed", "added"]
+        "unchanged",
+        "unchanged",
+        "unchanged",
+        "changed",
+        "added",
+    ]
 
 
 def test_repeated_identical_fork_reuses_suffix_cache(tmp_path):
@@ -28,11 +33,19 @@ def test_repeated_identical_fork_reuses_suffix_cache(tmp_path):
     provider = MockProvider()
     flow = research_workflow(provider)
     original = engine.run(flow, {"question": "offline storage?"})
-    first = engine.run(flow, {"question": "offline storage?"}, source=original,
-                       fork=Fork(4, {"prompt": FIXED_PROMPT}))
+    first = engine.run(
+        flow,
+        {"question": "offline storage?"},
+        source=original,
+        fork=Fork(4, {"prompt": FIXED_PROMPT}),
+    )
     count = provider.calls
-    second = engine.run(flow, {"question": "offline storage?"}, source=original,
-                        fork=Fork(4, {"prompt": FIXED_PROMPT}))
+    second = engine.run(
+        flow,
+        {"question": "offline storage?"},
+        source=original,
+        fork=Fork(4, {"prompt": FIXED_PROMPT}),
+    )
     assert provider.calls == count
     assert store.get_run(first)["output"] == store.get_run(second)["output"]
     assert store.steps(second)[3]["origin"] == "cached"

@@ -47,11 +47,13 @@ def test_in_memory_database_rejected_explicitly():
         Store(":memory:")
 
 
-@pytest.mark.parametrize("body", [{"choices": [1]}, {"choices": [None]},
-                                 {"choices": [{"message": "bad"}]}])
+@pytest.mark.parametrize(
+    "body", [{"choices": [1]}, {"choices": [None]}, {"choices": [{"message": "bad"}]}]
+)
 def test_malformed_provider_choice_rejected_as_contract_error(body):
-    with httpx.Client(transport=httpx.MockTransport(
-        lambda _: httpx.Response(200, json=body))) as http:
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, json=body))
+    ) as http:
         with pytest.raises(ValueError, match="completion"):
             OpenAIProvider("http://localhost/v1", "key", http=http).complete({})
 

@@ -10,8 +10,10 @@ from replaylab.web import create_app
 @pytest.fixture
 def client(tmp_path):
     store = Store(tmp_path / "trace.sqlite")
-    return TestClient(create_app(store, {"research": research_workflow(MockProvider())}),
-                      base_url="http://127.0.0.1")
+    return TestClient(
+        create_app(store, {"research": research_workflow(MockProvider())}),
+        base_url="http://127.0.0.1",
+    )
 
 
 def test_api_records_demo_inspects_forks_replays_and_compares(client):
@@ -21,8 +23,9 @@ def test_api_records_demo_inspects_forks_replays_and_compares(client):
     detail = client.get(f"/api/runs/{original}")
     assert detail.status_code == 200
     assert detail.json()["steps"][3]["error"] is not None
-    fork = client.post(f"/api/runs/{original}/fork", json={
-        "position": 4, "changes": {"prompt": FIXED_PROMPT}})
+    fork = client.post(
+        f"/api/runs/{original}/fork", json={"position": 4, "changes": {"prompt": FIXED_PROMPT}}
+    )
     assert fork.status_code == 201
     fork_id = fork.json()["id"]
     assert fork.json()["status"] == "completed"
@@ -38,9 +41,13 @@ def test_api_rejects_invalid_run_and_fork(client):
     assert client.get("/api/runs/missing").status_code == 404
     demo = client.post("/api/demo").json()
     url = f"/api/runs/{demo['original']}/fork"
-    assert client.post(url, json={"position": 999, "changes": {"prompt": "fixed"}}).status_code == 422
+    assert (
+        client.post(url, json={"position": 999, "changes": {"prompt": "fixed"}}).status_code == 422
+    )
     assert client.post(url, json={"position": 2, "changes": {"prompt": "fixed"}}).status_code == 422
-    assert client.post(url, json={"position": True, "changes": {"tool_result": 1}}).status_code == 422
+    assert (
+        client.post(url, json={"position": True, "changes": {"tool_result": 1}}).status_code == 422
+    )
     assert client.post(url, json={"position": 2, "changes": {}, "extra": 1}).status_code == 422
 
 

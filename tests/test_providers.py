@@ -14,12 +14,17 @@ def test_compatible_wrapper_prompt_model_params_fork(tmp_path):
     client = ChatClient(provider)
 
     def flow(question):
-        return client.chat.completions.create(model="mock-v1", messages=[
-            {"role": "user", "content": question}], temperature=0)
+        return client.chat.completions.create(
+            model="mock-v1", messages=[{"role": "user", "content": question}], temperature=0
+        )
 
     original = engine.run(flow, "hello")
-    forked = engine.run(flow, "hello", source=original, fork=Fork(1, {
-        "prompt": "edited", "model": "mock-v2", "params": {"temperature": 0.5}}))
+    forked = engine.run(
+        flow,
+        "hello",
+        source=original,
+        fork=Fork(1, {"prompt": "edited", "model": "mock-v2", "params": {"temperature": 0.5}}),
+    )
     payload = store.steps(forked)[0]["request"]["payload"]
     assert payload["messages"][0]["content"] == "edited"
     assert payload["model"] == "mock-v2"
@@ -42,8 +47,12 @@ def test_http_adapter_sends_openai_contract_and_no_key_in_trace(tmp_path):
         client = ChatClient(provider)
         store = Store(tmp_path / "trace.sqlite")
         engine = Engine(store)
-        run = engine.run(lambda text: client.chat.completions.create(
-            model="local-model", messages=[{"role": "user", "content": text}]), "question")
+        run = engine.run(
+            lambda text: client.chat.completions.create(
+                model="local-model", messages=[{"role": "user", "content": text}]
+            ),
+            "question",
+        )
     assert store.get_run(run)["status"] == "completed"
     assert str(observed[0].url) == "https://example.test/v1/chat/completions"
     assert observed[0].headers["authorization"] == "Bearer secret-test-key"
@@ -53,15 +62,23 @@ def test_http_adapter_sends_openai_contract_and_no_key_in_trace(tmp_path):
 
 @pytest.mark.parametrize("status,body", [(429, {}), (200, {}), (200, {"choices": []})])
 def test_http_adapter_rejects_errors_and_malformed_responses(status, body):
-    with httpx.Client(transport=httpx.MockTransport(
-        lambda _: httpx.Response(status, json=body))) as http:
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda _: httpx.Response(status, json=body))
+    ) as http:
         provider = OpenAIProvider("https://example.test/v1", "key", http=http)
         with pytest.raises((httpx.HTTPStatusError, ValueError)):
             provider.complete({"model": "x", "messages": []})
 
 
-@pytest.mark.parametrize("url", ["file:///etc/passwd", "https://user:pass@host/v1",
-                                 "https://host/v1?key=secret", "https://host/v1#fragment"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "file:///etc/passwd",
+        "https://user:pass@host/v1",
+        "https://host/v1?key=secret",
+        "https://host/v1#fragment",
+    ],
+)
 def test_rejects_unsafe_base_urls(url):
     with pytest.raises(ValueError):
         OpenAIProvider(url, "key")
@@ -71,8 +88,12 @@ def test_streaming_rejected_before_provider_call(tmp_path):
     provider = MockProvider()
     client = ChatClient(provider)
     store = Store(tmp_path / "trace.sqlite")
-    run = Engine(store).run(lambda _: client.chat.completions.create(
-        model="x", messages=[{"role": "user", "content": "hello"}], stream=True), None)
+    run = Engine(store).run(
+        lambda _: client.chat.completions.create(
+            model="x", messages=[{"role": "user", "content": "hello"}], stream=True
+        ),
+        None,
+    )
     assert store.get_run(run)["status"] == "failed"
     assert provider.calls == 0
 
@@ -86,7 +107,8 @@ def test_provider_namespace_prevents_wrong_endpoint_cache_reuse(tmp_path):
 
     def flow(text):
         return active[0].chat.completions.create(
-            model="mock", messages=[{"role": "user", "content": text}])
+            model="mock", messages=[{"role": "user", "content": text}]
+        )
 
     original = Engine(store).run(flow, "hello")
     active[0] = ChatClient(b)

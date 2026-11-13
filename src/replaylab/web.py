@@ -38,13 +38,15 @@ def create_app(store: Store, workflows: dict[str, Callable]) -> FastAPI:
             if origin != expected:
                 return JSONResponse({"detail": "Same-origin requests only"}, status_code=403)
         response = await call_next(request)
-        response.headers.update({
-            "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; "
-                                       "base-uri 'none'; form-action 'self'",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-            "Cache-Control": "no-store",
-        })
+        response.headers.update(
+            {
+                "Content-Security-Policy": "default-src 'self'; frame-ancestors 'none'; "
+                "base-uri 'none'; form-action 'self'",
+                "X-Content-Type-Options": "nosniff",
+                "Referrer-Policy": "no-referrer",
+                "Cache-Control": "no-store",
+            }
+        )
         return response
 
     @app.exception_handler(KeyError)
@@ -75,10 +77,18 @@ def create_app(store: Store, workflows: dict[str, Callable]) -> FastAPI:
         source = store.get_run(run_id)
         workflow = workflows.get(source["workflow"])
         if workflow is None:
-            raise HTTPException(409, "Workflow is not registered; restart with --app module:function")
+            raise HTTPException(
+                409, "Workflow is not registered; restart with --app module:function"
+            )
         fork = Fork(edit.position, edit.changes) if edit else None
-        result = engine.run(workflow, source["input"], source=run_id, fork=fork,
-                            mode="record" if fork else "replay", name=source["workflow"])
+        result = engine.run(
+            workflow,
+            source["input"],
+            source=run_id,
+            fork=fork,
+            mode="record" if fork else "replay",
+            name=source["workflow"],
+        )
         return store.get_run(result)
 
     @app.post("/api/runs/{run_id}/fork", status_code=201)

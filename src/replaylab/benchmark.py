@@ -35,8 +35,9 @@ def benchmark(trials: int = 50) -> dict:
                 elif name == "replay":
                     run_id = engine.run(flow, data, mode="replay", source=repaired)
                 else:
-                    run_id = engine.run(flow, data, source=original,
-                                        fork=Fork(4, {"prompt": FIXED_PROMPT}))
+                    run_id = engine.run(
+                        flow, data, source=original, fork=Fork(4, {"prompt": FIXED_PROMPT})
+                    )
                     if name == "fork":
                         repaired = run_id
                 samples[name].append((perf_counter() - start) * 1000)
@@ -49,10 +50,17 @@ def benchmark(trials: int = 50) -> dict:
     latency = {}
     for name, values in samples.items():
         ordered = sorted(values)
-        latency[name] = {"median": round(statistics.median(values), 3),
-                         "p95": round(ordered[math.ceil(len(ordered) * 0.95) - 1], 3)}
-    return {"trials": trials, "provider": "deterministic mock (no artificial delay)",
-            "python": platform.python_version(), "platform": platform.platform(),
-            "latency_ms": latency, "provider_calls": counts,
-            "prefix_steps_replayed": prefix_steps,
-            "method": "fresh database per trial; schema setup excluded; real SQLite commits included"}
+        latency[name] = {
+            "median": round(statistics.median(values), 3),
+            "p95": round(ordered[math.ceil(len(ordered) * 0.95) - 1], 3),
+        }
+    return {
+        "trials": trials,
+        "provider": "deterministic mock (no artificial delay)",
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "latency_ms": latency,
+        "provider_calls": counts,
+        "prefix_steps_replayed": prefix_steps,
+        "method": "fresh database per trial; schema setup excluded; real SQLite commits included",
+    }

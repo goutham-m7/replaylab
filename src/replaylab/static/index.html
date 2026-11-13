@@ -1,51 +1,118 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Replaylab — local trace workbench</title>
-  <link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script>
-</head>
-<body>
-<header class="masthead">
-  <a href="/" class="brand">Replaylab<span>LOCAL TRACE WORKBENCH</span></a>
-  <div class="header-actions"><span class="offline">● Local · SQLite</span>
-    <button id="demo" class="primary">Run offline demo</button></div>
-</header>
-<div id="notice" role="status" aria-live="polite" hidden></div>
-<section class="intro"><div><p class="eyebrow">REWIND / CHANGE ONE THING / REPLAY</p>
-  <h1>A failure is a starting point.</h1>
-  <p>Inspect a boundary. Keep the past. Fork the next decision.</p></div>
-  <div class="legend"><span class="legend-line"></span>Immutable prefix <b>↗</b> Editable future</div>
-</section>
-<main class="workspace">
-  <aside class="runs panel"><div class="panel-heading"><h2>Runs</h2><button id="refresh" class="quiet">Refresh</button></div>
-    <div id="run-list"></div>
-    <p class="hint">Traces stay on this machine. No accounts, telemetry, or network calls in the demo.</p>
-  </aside>
-  <section class="panel timeline-panel"><div class="panel-heading"><h2>Timeline</h2><span id="step-count" class="mono"></span></div>
-    <div id="run-info" class="run-info"><p>Run the offline demo to record a failure and its repair.</p></div>
-    <div id="timeline" class="timeline"></div>
-    <button id="replay" class="secondary" hidden>Replay run · no boundary calls</button>
-  </section>
-  <section class="panel inspector"><div class="panel-heading"><h2>Step inspector</h2><span id="step-label" class="mono">—</span></div>
-    <div id="step-detail"><p class="empty">Select a step to inspect its request, result, and state.</p></div>
-    <form id="fork-form" hidden>
-      <div class="fork-heading"><span>↗</span><div><h3>Fork from this step</h3><p>Earlier boundaries replay. The suffix may execute tools again.</p></div></div>
-      <div id="llm-fields"><label for="prompt">Prompt · last user message</label><textarea id="prompt" rows="4"></textarea>
-        <label for="model">Model</label><input id="model" type="text">
-        <label for="params">Generation parameters · JSON object</label><textarea id="params" rows="3" class="mono"></textarea></div>
-      <div id="tool-fields" hidden><label for="tool-result">Tool result · JSON</label><textarea id="tool-result" rows="5" class="mono"></textarea>
-        <label for="after-state">After-state · JSON object</label><textarea id="after-state" rows="3" class="mono"></textarea></div>
-      <button class="primary" type="submit" id="fork-submit">Fork &amp; re-execute</button>
-    </form>
-  </section>
-</main>
-<section class="comparison panel">
-  <div class="panel-heading"><h2>Side-by-side diff</h2><span id="diff-count" class="mono"></span></div>
-  <form id="compare-form"><label for="left-run">Original</label><select id="left-run" required></select>
-    <span aria-hidden="true">→</span><label for="right-run">Fork</label><select id="right-run" required></select>
-    <button type="submit" class="secondary">Compare runs</button></form>
-  <div id="diff"><p class="empty">Create a fork or choose two runs to compare requests, results, and snapshots.</p></div>
-</section>
-<footer>Sequential Python workflows. Exact JSON boundaries. <span>No magic stack snapshots.</span></footer>
-</body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Replaylab — local trace workbench</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <a href="/" class="brand">Replaylab<span>LOCAL TRACE WORKBENCH</span></a>
+      <div class="header-actions">
+        <span class="offline">● Local · SQLite</span>
+        <button id="demo" class="primary">Run offline demo</button>
+      </div>
+    </header>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">REWIND / CHANGE ONE THING / REPLAY</p>
+        <h1>A failure is a starting point.</h1>
+        <p>Inspect a boundary. Keep the past. Fork the next decision.</p>
+      </div>
+      <div class="legend">
+        <span class="legend-line"></span>Immutable prefix <b>↗</b> Editable
+        future
+      </div>
+    </section>
+    <main class="workspace">
+      <aside class="runs panel">
+        <div class="panel-heading">
+          <h2>Runs</h2>
+          <button id="refresh" class="quiet">Refresh</button>
+        </div>
+        <div id="run-list"></div>
+        <p class="hint">
+          Traces stay on this machine. No accounts, telemetry, or network calls
+          in the demo.
+        </p>
+      </aside>
+      <section class="panel timeline-panel">
+        <div class="panel-heading">
+          <h2>Timeline</h2>
+          <span id="step-count" class="mono"></span>
+        </div>
+        <div id="run-info" class="run-info">
+          <p>Run the offline demo to record a failure and its repair.</p>
+        </div>
+        <div id="timeline" class="timeline"></div>
+        <button id="replay" class="secondary" hidden>
+          Replay run · no boundary calls
+        </button>
+      </section>
+      <section class="panel inspector">
+        <div class="panel-heading">
+          <h2>Step inspector</h2>
+          <span id="step-label" class="mono">—</span>
+        </div>
+        <div id="step-detail">
+          <p class="empty">
+            Select a step to inspect its request, result, and state.
+          </p>
+        </div>
+        <form id="fork-form" hidden>
+          <div class="fork-heading">
+            <span>↗</span>
+            <div>
+              <h3>Fork from this step</h3>
+              <p>
+                Earlier boundaries replay. The suffix may execute tools again.
+              </p>
+            </div>
+          </div>
+          <div id="llm-fields">
+            <label for="prompt">Prompt · last user message</label
+            ><textarea id="prompt" rows="4"></textarea>
+            <label for="model">Model</label><input id="model" type="text" />
+            <label for="params">Generation parameters · JSON object</label
+            ><textarea id="params" rows="3" class="mono"></textarea>
+          </div>
+          <div id="tool-fields" hidden>
+            <label for="tool-result">Tool result · JSON</label
+            ><textarea id="tool-result" rows="5" class="mono"></textarea>
+            <label for="after-state">After-state · JSON object</label
+            ><textarea id="after-state" rows="3" class="mono"></textarea>
+          </div>
+          <button class="primary" type="submit" id="fork-submit">
+            Fork &amp; re-execute
+          </button>
+        </form>
+      </section>
+    </main>
+    <section class="comparison panel">
+      <div class="panel-heading">
+        <h2>Side-by-side diff</h2>
+        <span id="diff-count" class="mono"></span>
+      </div>
+      <form id="compare-form">
+        <label for="left-run">Original</label
+        ><select id="left-run" required></select>
+        <span aria-hidden="true">→</span><label for="right-run">Fork</label
+        ><select id="right-run" required></select>
+        <button type="submit" class="secondary">Compare runs</button>
+      </form>
+      <div id="diff">
+        <p class="empty">
+          Create a fork or choose two runs to compare requests, results, and
+          snapshots.
+        </p>
+      </div>
+    </section>
+    <footer>
+      Sequential Python workflows. Exact JSON boundaries.
+      <span>No magic stack snapshots.</span>
+    </footer>
+  </body>
+</html>

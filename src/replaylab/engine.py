@@ -25,7 +25,11 @@ class Fork:
     changes: dict
 
     def __post_init__(self):
-        if isinstance(self.position, bool) or not isinstance(self.position, int) or self.position < 1:
+        if (
+            isinstance(self.position, bool)
+            or not isinstance(self.position, int)
+            or self.position < 1
+        ):
             raise ValueError("Fork position must be a positive integer")
         if not isinstance(self.changes, dict):
             raise ValueError("Fork changes must be an object")
@@ -97,8 +101,16 @@ class Session:
         before = clone(self.state)
         if not isinstance(before, dict):
             raise TypeError("Session state must be a JSON object")
-        request = clone(dict(kind=kind, name=name, version=version, namespace=namespace,
-                             payload=payload, state=before))
+        request = clone(
+            dict(
+                kind=kind,
+                name=name,
+                version=version,
+                namespace=namespace,
+                payload=payload,
+                state=before,
+            )
+        )
         self.position += 1
         position = self.position
         at_fork = self.fork is not None and position == self.fork.position
@@ -109,8 +121,10 @@ class Session:
             if all(previous[field] == request[field] for field in identity):
                 intervention = clone(previous.get("intervention", {}))
         if at_fork:
-            merged_params = {**intervention.get("params", {}),
-                             **self.fork.changes.get("params", {})}
+            merged_params = {
+                **intervention.get("params", {}),
+                **self.fork.changes.get("params", {}),
+            }
             intervention.update(self.fork.changes)
             if merged_params:
                 intervention["params"] = merged_params
@@ -164,11 +178,22 @@ class Session:
             except (TypeError, ValueError):
                 # Preserve the failure trace even when a tool violated the JSON contract.
                 self.state = after = before
-            self.store.append_step(self.run_id, dict(
-                position=position, kind=kind, name=name, key=key, request=request,
-                output=output, error=error, state_before=before, state_after=after,
-                origin=origin, duration_ms=round((perf_counter() - start) * 1000, 3),
-            ))
+            self.store.append_step(
+                self.run_id,
+                dict(
+                    position=position,
+                    kind=kind,
+                    name=name,
+                    key=key,
+                    request=request,
+                    output=output,
+                    error=error,
+                    state_before=before,
+                    state_after=after,
+                    origin=origin,
+                    duration_ms=round((perf_counter() - start) * 1000, 3),
+                ),
+            )
 
 
 class Engine:
@@ -197,8 +222,9 @@ class Engine:
                 raise ValueError("Fork position is outside the source trace")
             fork.validate_kind(source_steps[fork.position - 1]["kind"])
         fork_json = None if fork is None else dict(position=fork.position, changes=fork.changes)
-        run_id = self.store.create_run(name or workflow.__name__, input,
-                                       "fork" if fork else mode, source, fork_json)
+        run_id = self.store.create_run(
+            name or workflow.__name__, input, "fork" if fork else mode, source, fork_json
+        )
         session = Session(self.store, run_id, mode, source_steps, fork)
         token = _ACTIVE.set(session)
         try:
@@ -208,8 +234,9 @@ class Engine:
                 raise ReplayDivergence("Workflow ended before consuming the recorded prefix")
             self.store.finish_run(run_id, "completed", output, None)
         except Exception as exc:
-            self.store.finish_run(run_id, "failed", None,
-                                  {"type": type(exc).__name__, "message": str(exc)})
+            self.store.finish_run(
+                run_id, "failed", None, {"type": type(exc).__name__, "message": str(exc)}
+            )
         finally:
             _ACTIVE.reset(token)
         return run_id
@@ -217,6 +244,7 @@ class Engine:
 
 def step(function=None, *, name=None, version="1"):
     """Trace a synchronous leaf function; arguments and result must be JSON values."""
+
     def decorate(fn):
         if inspect.iscoroutinefunction(fn):
             raise TypeError("async steps are not supported")
@@ -231,5 +259,7 @@ def step(function=None, *, name=None, version="1"):
             return current_session().call(
                 "tool", step_name, version, payload, lambda _: fn(*args, **kwargs)
             )
+
         return wrapped
+
     return decorate(function) if function is not None else decorate

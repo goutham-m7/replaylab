@@ -111,6 +111,7 @@ def test_shortened_replay_fails_closed(env):
         return tool(data + 1)
 
     original = engine.run(flow, 1)
+
     # Same declared workflow, but control flow changed outside traced boundaries.
     def shorter(data):
         return tool(data)
@@ -132,8 +133,9 @@ def test_tool_override_can_replace_state(env):
         return current_session().state
 
     original = engine.run(flow, 1)
-    forked = engine.run(flow, 1, source=original,
-                        fork=Fork(1, {"tool_result": 2, "state_after": {"value": 2}}))
+    forked = engine.run(
+        flow, 1, source=original, fork=Fork(1, {"tool_result": 2, "state_after": {"value": 2}})
+    )
     assert store.get_run(forked)["output"] == {"value": 2}
 
 
@@ -146,6 +148,7 @@ def test_step_requires_session_and_rejects_async():
         tool()
 
     with pytest.raises(TypeError, match="async"):
+
         @step
         async def asynchronous():
             return 1
@@ -166,9 +169,16 @@ def test_nested_steps_rejected(env):
     assert store.get_run(run)["error"]["type"] == "RuntimeError"
 
 
-@pytest.mark.parametrize("edit", [{}, {"unknown": 1}, {"prompt": ""},
-                                  {"params": {"model": "bad"}},
-                                  {"tool_result": 1, "prompt": "bad"}])
+@pytest.mark.parametrize(
+    "edit",
+    [
+        {},
+        {"unknown": 1},
+        {"prompt": ""},
+        {"params": {"model": "bad"}},
+        {"tool_result": 1, "prompt": "bad"},
+    ],
+)
 def test_invalid_fork_edits_rejected(edit):
     with pytest.raises(ValueError):
         Fork(1, edit)

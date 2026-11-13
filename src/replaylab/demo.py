@@ -8,10 +8,16 @@ from replaylab.store import Store
 QUESTION = "Which store suits a single-user offline agent trace?"
 FIXED_PROMPT = "Cite only source IDs from the supplied evidence. Recommend an offline trace store."
 SOURCES = [
-    {"id": "S1", "title": "Synthetic SQLite note",
-     "text": "Embedded SQL database. Works offline. One concurrent writer. No server required."},
-    {"id": "S2", "title": "Synthetic ServerDB note",
-     "text": "Client-server database. Requires a service. Supports multiple concurrent writers."},
+    {
+        "id": "S1",
+        "title": "Synthetic SQLite note",
+        "text": "Embedded SQL database. Works offline. One concurrent writer. No server required.",
+    },
+    {
+        "id": "S2",
+        "title": "Synthetic ServerDB note",
+        "text": "Client-server database. Requires a service. Supports multiple concurrent writers.",
+    },
 ]
 
 
@@ -38,9 +44,12 @@ def research_workflow(provider: Provider):
 
         def llm(task, prompt):
             response = client.chat.completions.create(
-                model="mock-research-v1", temperature=0,
-                messages=[{"role": "system", "content": f"task:{task}"},
-                          {"role": "user", "content": prompt}],
+                model="mock-research-v1",
+                temperature=0,
+                messages=[
+                    {"role": "system", "content": f"task:{task}"},
+                    {"role": "user", "content": prompt},
+                ],
             )
             return response["choices"][0]["message"]["content"]
 
@@ -60,9 +69,14 @@ def run_demo(store: Store) -> dict:
     data = {"question": QUESTION}
     original = engine.run(flow, data, name="research")
     original_calls = provider.calls
-    forked = engine.run(flow, data, source=original, fork=Fork(4, {"prompt": FIXED_PROMPT}),
-                        name="research")
-    return dict(original=original, fork=forked, original_provider_calls=original_calls,
-                fork_provider_calls=provider.calls - original_calls,
-                prefix_replayed=sum(s["origin"] == "replayed" for s in store.steps(forked)),
-                diff=compare(store, original, forked))
+    forked = engine.run(
+        flow, data, source=original, fork=Fork(4, {"prompt": FIXED_PROMPT}), name="research"
+    )
+    return dict(
+        original=original,
+        fork=forked,
+        original_provider_calls=original_calls,
+        fork_provider_calls=provider.calls - original_calls,
+        prefix_replayed=sum(s["origin"] == "replayed" for s in store.steps(forked)),
+        diff=compare(store, original, forked),
+    )

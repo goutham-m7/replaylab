@@ -25,8 +25,11 @@ def workflow(data: dict) -> dict:
         raise ValueError("REPLAYLAB_PROVIDER must be mock or openai")
     evidence = lookup(data["topic"])
     result = ChatClient(provider).chat.completions.create(
-        model=model, temperature=0,
-        messages=[{"role": "system", "content": "Answer using only the supplied evidence."},
-                  {"role": "user", "content": str(evidence)}],
+        model=model,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": "Answer using only the supplied evidence."},
+            {"role": "user", "content": str(evidence)},
+        ],
     )
     return {"answer": result["choices"][0]["message"]["content"], "evidence": evidence}

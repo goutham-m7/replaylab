@@ -32,8 +32,13 @@ def parser():
         sub = commands.add_parser(command)
         sub.add_argument("--db", type=Path, default=Path(".replaylab/traces.sqlite"))
         if command in {"replay", "fork", "serve"}:
-            sub.add_argument("--app", action="append", default=[], metavar="MODULE:FUNCTION",
-                             help="Explicitly trust/register a workflow (repeatable)")
+            sub.add_argument(
+                "--app",
+                action="append",
+                default=[],
+                metavar="MODULE:FUNCTION",
+                help="Explicitly trust/register a workflow (repeatable)",
+            )
         if command in {"inspect", "replay", "fork"}:
             sub.add_argument("run_id")
         if command == "demo":
@@ -48,7 +53,9 @@ def parser():
             sub.add_argument("--input", required=True, help="JSON workflow input")
         elif command == "fork":
             sub.add_argument("--step", type=int, required=True)
-            sub.add_argument("--edit", required=True, help="JSON prompt/model/params/tool_result edit")
+            sub.add_argument(
+                "--edit", required=True, help="JSON prompt/model/params/tool_result edit"
+            )
         elif command == "serve":
             sub.add_argument("--port", type=int, default=8765)
     bench = commands.add_parser("benchmark")
@@ -64,8 +71,10 @@ def demo_text(result, store):
     print("replaylab / offline research repair")
     print(f"Original: {result['original']} / failed at step 4")
     print(f"Fork:     {result['fork']} / {store.get_run(result['fork'])['status']}")
-    print(f"Provider calls: original={result['original_provider_calls']}, "
-          f"fork={result['fork_provider_calls']}")
+    print(
+        f"Provider calls: original={result['original_provider_calls']}, "
+        f"fork={result['fork_provider_calls']}"
+    )
     print(f"Prefix replayed: {result['prefix_replayed']}/3 steps (zero boundary calls)")
     print("Step  Original                       Fork")
     for row in result["diff"]["steps"]:
@@ -106,8 +115,9 @@ def main():
         elif args.command == "diff":
             emit(compare(store, args.left, args.right))
         elif args.command == "run":
-            run_id = engine.run(load_workflow(args.workflow), json.loads(args.input),
-                                name=args.workflow)
+            run_id = engine.run(
+                load_workflow(args.workflow), json.loads(args.input), name=args.workflow
+            )
             emit(store.get_run(run_id))
             return 0 if store.get_run(run_id)["status"] == "completed" else 1
         else:
@@ -124,9 +134,14 @@ def main():
                 if source["workflow"] not in registry:
                     raise ValueError("Workflow not registered; pass --app module:function")
                 edit = Fork(args.step, json.loads(args.edit)) if args.command == "fork" else None
-                run_id = engine.run(registry[source["workflow"]], source["input"],
-                                    name=source["workflow"], source=args.run_id, fork=edit,
-                                    mode="record" if edit else "replay")
+                run_id = engine.run(
+                    registry[source["workflow"]],
+                    source["input"],
+                    name=source["workflow"],
+                    source=args.run_id,
+                    fork=edit,
+                    mode="record" if edit else "replay",
+                )
                 emit(store.get_run(run_id))
                 return 0 if store.get_run(run_id)["status"] == "completed" else 1
         return 0
