@@ -1,5 +1,6 @@
 """Pluggable deterministic mock and non-streaming OpenAI-compatible HTTP adapter."""
 
+import json
 from typing import Protocol
 from urllib.parse import urlsplit
 
@@ -63,7 +64,7 @@ class OpenAIProvider:
 class MockProvider:
     """Offline fixture, not a language model. Task markers drive the research demo."""
 
-    namespace = "replaylab:synthetic-mock:v1"
+    namespace = "replaylab:synthetic-mock:v2"
 
     def __init__(self):
         self.calls = 0
@@ -76,12 +77,13 @@ class MockProvider:
         if "task:plan" in system:
             text = "Compare embedded SQLite with a server database for offline trace storage."
         elif "task:summarize" in system:
-            text = (
-                "[S1] SQLite: embedded, offline, single writer. [S2] ServerDB: multi-user service."
-            )
+            sources = json.loads(prompt)
+            text = "\n".join(f"[{s['id']}] {s['title']}: {s['text']}" for s in sources)
         elif "task:answer" in system:
             if "Cite only source IDs" not in prompt:
                 raise ValueError("Citation policy failed: step 4 prompt omitted source grounding")
+            if "[S1]" not in system or "No server required" not in system:
+                raise ValueError("Supplied evidence does not support the offline recommendation")
             text = "Choose SQLite for a single-user offline trace: no server required [S1]."
         else:
             text = f"Mock response: {prompt}"

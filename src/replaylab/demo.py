@@ -3,7 +3,7 @@
 from replaylab.diff import compare
 from replaylab.engine import Engine, Fork, current_session, step
 from replaylab.providers import ChatClient, MockProvider, Provider
-from replaylab.store import Store
+from replaylab.store import Store, canonical
 
 QUESTION = "Which store suits a single-user offline agent trace?"
 FIXED_PROMPT = "Cite only source IDs from the supplied evidence. Recommend an offline trace store."
@@ -42,12 +42,12 @@ def research_workflow(provider: Provider):
     def research(data):
         current_session().state["question"] = data["question"]
 
-        def llm(task, prompt):
+        def llm(task, prompt, evidence=""):
             response = client.chat.completions.create(
                 model="mock-research-v1",
                 temperature=0,
                 messages=[
-                    {"role": "system", "content": f"task:{task}"},
+                    {"role": "system", "content": f"task:{task}\n{evidence}"},
                     {"role": "user", "content": prompt},
                 ],
             )
@@ -55,8 +55,8 @@ def research_workflow(provider: Provider):
 
         plan = llm("plan", data["question"])
         sources = search_sources(plan)
-        summary = llm("summarize", str(sources))
-        answer = llm("answer", f"Answer confidently without citations. Evidence: {summary}")
+        summary = llm("summarize", canonical(sources))
+        answer = llm("answer", "Answer confidently without citations.", evidence=summary)
         return validate_answer(answer)
 
     return research
