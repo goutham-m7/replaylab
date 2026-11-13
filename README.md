@@ -103,10 +103,12 @@ from replaylab.providers import ChatClient, MockProvider
 
 client = ChatClient(MockProvider())
 
+
 @step(name="lookup", version="1")
 def lookup(topic: str) -> dict:
     current_session().state["topic"] = topic
     return {"source": "synthetic note", "text": "SQLite works offline."}
+
 
 def app(data: dict) -> dict:
     note = lookup(data["topic"])
@@ -116,12 +118,15 @@ def app(data: dict) -> dict:
         temperature=0,
     )
 
+
 store = Store(".replaylab/sdk.sqlite")
 engine = Engine(store)
 data = {"topic": "offline tracing"}
 original = engine.run(app, data)
 forked = engine.run(
-    app, data, source=original,
+    app,
+    data,
+    source=original,
     fork=Fork(2, {"prompt": "Explain offline tracing.", "params": {"temperature": 0.2}}),
 )
 replayed = engine.run(app, data, source=forked, mode="replay")
@@ -143,10 +148,12 @@ Bump a tool's `version` when its implementation or external data contract change
 import os
 from replaylab.providers import ChatClient, OpenAIProvider
 
-client = ChatClient(OpenAIProvider(
-    base_url=os.environ["OPENAI_BASE_URL"],
-    api_key=os.environ["OPENAI_API_KEY"],
-))
+client = ChatClient(
+    OpenAIProvider(
+        base_url=os.environ["OPENAI_BASE_URL"],
+        api_key=os.environ["OPENAI_API_KEY"],
+    )
+)
 # Inside your Engine workflow:
 # client.chat.completions.create(model="your-model", messages=[...])
 ```
