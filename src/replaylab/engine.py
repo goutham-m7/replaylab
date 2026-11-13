@@ -102,8 +102,22 @@ class Session:
         self.position += 1
         position = self.position
         at_fork = self.fork is not None and position == self.fork.position
+        intervention = {}
+        if position <= len(self.source_steps):
+            previous = self.source_steps[position - 1]["request"]
+            identity = ("kind", "name", "version", "namespace")
+            if all(previous[field] == request[field] for field in identity):
+                intervention = clone(previous.get("intervention", {}))
         if at_fork:
-            request = self.fork.apply(request)
+            merged_params = {**intervention.get("params", {}),
+                             **self.fork.changes.get("params", {})}
+            intervention.update(self.fork.changes)
+            if merged_params:
+                intervention["params"] = merged_params
+        if intervention:
+            base_key = request_key(request)
+            request = Fork(position, intervention).apply(request)
+            request.update(intervention=intervention, base_key=base_key)
         key = request_key(request)
         start = perf_counter()
         output = error = None
@@ -122,10 +136,10 @@ class Session:
                 if old["error"] is not None:
                     raise RecordedFailure(f"{old['error']['type']}: {old['error']['message']}")
                 output = clone(old["output"])
-            elif at_fork and "tool_result" in self.fork.changes:
+            elif "tool_result" in intervention:
                 origin = "overridden"
-                output = clone(self.fork.changes["tool_result"])
-                self.state = clone(self.fork.changes.get("state_after", before))
+                output = clone(intervention["tool_result"])
+                self.state = clone(intervention.get("state_after", before))
             else:
                 cached = self.store.cached(key) if self.fork is not None else None
                 if cached is not None:
