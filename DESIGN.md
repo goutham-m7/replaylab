@@ -19,16 +19,22 @@ re-enter the workflow and verify/replay its prefix. JSON is the entire data cont
 ## Execution contract
 - Record mode executes every boundary, even when a matching cached value exists.
 - SHA-256 keys cover canonical JSON: kind, stable name, version, provider namespace,
-  arguments, and incoming state. Secrets are not part of a request or trace.
+  arguments, and incoming state. Adapter API keys are excluded; user content is not scrubbed.
 - Replay mode consumes the source run by position and matching hash, never executing
-  providers or tools. A changed prefix, missing step, or shortened workflow fails closed.
+  providers or tools. A changed prefix, missing/shortened trace, changed final output,
+  or swallowed source failure fails closed.
 - Fork replays positions before N, applies one validated edit at N, and executes the
   suffix with content-addressed cache reuse. No cache entry exists for failures.
+- Effective interventions and the pre-edit request hash travel with each boundary.
+  Replaying a fork reapplies that intervention before hash validation; descendants
+  inherit edits, and a new edit at the same boundary merges generation parameters.
 - Prefix state is restored from recorded after-state. Cached tools also restore state.
 - A tool-result override supplies its after-state explicitly or preserves incoming state.
 - Steps are leaf boundaries; nested decorated steps and async functions are rejected.
   Workflow control flow, randomness, environment reads and effects outside boundaries
   remain the application's responsibility. No claim of arbitrary Python determinism.
+  Only `Session.state` mutations are restored, not mutations to arbitrary arguments
+  or globals. Keep workflow control flow pure and version changed tool implementations.
 - Failure rows capture exception type/message and state. Replaying a failure raises a
   RecordedFailure. Each run retains status/error and completed trace, including failures.
 - Each row is committed independently; interrupted runs remain marked running.
@@ -84,3 +90,40 @@ step data, compact uppercase labels. Signature: a split-rail timeline with a vis
 fork seam, connecting the immutable past to an editable future. Three panes: runs,
 timeline, inspector; comparison uses aligned original/fork JSON. Responsive stacked
 panels, keyboard focus, native forms, no animation or external font requests.
+
+## Interview notes
+
+### Re-entry instead of stack snapshots
+The hard part is suppressing repeated effects while preserving control flow. Restart
+the trusted workflow and replay leaf results plus after-state. Reject positional/hash
+drift and changed final outputs. Rejected: pickle/cloudpickle checkpoints, which are
+unsafe to load, bind traces to Python internals, and do not capture external effects.
+Tradeoff: synchronous, sequential workflows only; hidden time/random/global inputs
+must become explicit boundary inputs or traced tools.
+
+### Content identity instead of a position-only cache
+A step number identifies a location, not a computation. Hash canonical JSON including
+provider namespace, boundary version, arguments and incoming state. Record always
+executes; replay never executes; forks may reuse successful suffix results. Rejected:
+prompt-only hashing (wrong models/parameters/states collide), and caching failures
+(temporary network errors become sticky). Cache entries store output and after-state
+together. New credentials on the same endpoint are not a separate namespace: use a
+separate database or an account-specific provider namespace when changing accounts.
+
+### Branch provenance instead of rewriting the original
+The original run remains unchanged. Each child points to its source and records the
+effective intervention plus the unpatched hash at edited boundaries. This extra hash
+matters: replacing a prompt must not hide a changed live workflow during later replay.
+Rejected: mutating original request rows, which destroys the evidence needed for a diff;
+and storing only a parent edit, which breaks replay when branching an existing fork.
+Costs: repeated prefix rows and JSON snapshots increase storage.
+
+### At 100× scale
+First measure trace volume and writer contention; this project has not benchmarked
+that load. Paginate run listings and step payloads, move large payloads to blobs keyed
+by digest, and reference prefix steps instead of copying them. Introduce a single
+writer queue or Postgres if concurrent writers dominate. Keep replay identity separate
+from storage layout. Authentication, tenant-scoped cache namespaces, encrypted payloads,
+retention, and worker isolation would be prerequisites for a shared deployment, not
+optional UI additions. Async/DAG replay needs stable logical boundary IDs rather than
+position; do not retrofit it by sharing a mutable sequential counter.

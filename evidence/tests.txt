@@ -1,0 +1,20 @@
+........................................................................ [ 96%]
+...                                                                      [100%]
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.12.15-final-0 _______________
+
+Name                         Stmts   Miss  Cover   Missing
+----------------------------------------------------------
+src/replaylab/__init__.py        3      0   100%
+src/replaylab/__main__.py        2      2     0%   1-3
+src/replaylab/benchmark.py      46      2    96%   18, 47
+src/replaylab/cli.py           112     11    90%   20, 24, 92-95, 113, 127-131, 135, 154
+src/replaylab/demo.py           39      1    97%   34
+src/replaylab/diff.py           12      0   100%
+src/replaylab/engine.py        195      4    98%   69, 103, 213, 215
+src/replaylab/providers.py      69      3    96%   60-61, 86
+src/replaylab/store.py          91      0   100%
+src/replaylab/web.py            70      0   100%
+----------------------------------------------------------
+TOTAL                          639     23    96%
+75 passed in 2.80s

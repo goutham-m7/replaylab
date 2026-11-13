@@ -1,0 +1,12 @@
+replaylab / offline research repair
+Original: failed at step 4
+Fork:     completed
+Provider calls: original=3, fork=1
+Prefix replayed: 3/3 steps (zero boundary calls)
+Step  Original                       Fork
+   1  llm                            replayed / unchanged
+   2  tool                           replayed / unchanged
+   3  llm                            replayed / unchanged
+   4  error                          executed / changed
+   5  —                              executed / added
+Answer: Choose SQLite for a single-user offline trace: no server required [S1].

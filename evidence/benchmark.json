@@ -1,0 +1,32 @@
+{
+  "trials": 50,
+  "provider": "deterministic mock (no artificial delay)",
+  "python": "3.12.15",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "latency_ms": {
+    "record": {
+      "median": 2.877,
+      "p95": 3.726
+    },
+    "fork": {
+      "median": 4.714,
+      "p95": 5.486
+    },
+    "replay": {
+      "median": 4.425,
+      "p95": 5.526
+    },
+    "warm_fork": {
+      "median": 4.756,
+      "p95": 6.272
+    }
+  },
+  "provider_calls": {
+    "record": 150,
+    "fork": 50,
+    "replay": 0,
+    "warm_fork": 0
+  },
+  "prefix_steps_replayed": 150,
+  "method": "fresh database per trial; schema setup excluded; real SQLite commits included"
+}
