@@ -257,6 +257,8 @@ not exact milliseconds.
 
 [DESIGN.md](DESIGN.md) covers contracts, failure behavior, security, rejected alternatives,
 and interview notes. [evidence/README.md](evidence/README.md) maps proof to acceptance criteria.
+Installation, lint, tests, CLI/module demos, and wheel/sdist builds also passed in a
+[clean local filesystem clone](evidence/clean-clone.txt).
 
 ## Limitations and safety
 

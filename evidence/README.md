@@ -45,6 +45,14 @@ No random data or simulated latency. Each trial owns a fresh database. Real timi
 vary; boundary/provider call counts are deterministic. UUIDs and timestamps are unique
 trace metadata and intentionally excluded from human demo output and semantic diffs.
 
+## Clean clone
+
+[clean-clone.txt](clean-clone.txt) records local-filesystem cloning, locked installation,
+lint/format checks, tests with coverage, both executable/module demos, and artifact builds.
+The initial clone caught unformatted README Python fences; the correction was committed,
+then the remaining checks passed. No remote was contacted. Both wheels and source
+distributions built; the wheel includes the frontend HTML, CSS, and JavaScript assets.
+
 ## Evidence limits
 
 The HTTP adapter used a controlled HTTPX transport, not a live paid model. Browser
