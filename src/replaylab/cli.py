@@ -51,6 +51,8 @@ def parser():
             sub.add_argument("--edit", required=True, help="JSON prompt/model/params/tool_result edit")
         elif command == "serve":
             sub.add_argument("--port", type=int, default=8765)
+    bench = commands.add_parser("benchmark")
+    bench.add_argument("--trials", type=int, default=50)
     return root
 
 
@@ -77,6 +79,11 @@ def demo_text(result, store):
 def main():
     args = parser().parse_args()
     try:
+        if args.command == "benchmark":
+            from replaylab.benchmark import benchmark
+
+            emit(benchmark(args.trials))
+            return 0
         store = Store(args.db)
         engine = Engine(store)
         if args.command == "demo":
