@@ -534,3 +534,10 @@ footer {
     display: block;
   }
 }
+.comparison-result {
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  max-height: 100px;
+  overflow: auto;
+}

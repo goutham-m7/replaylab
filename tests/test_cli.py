@@ -50,3 +50,10 @@ def test_cli_records_failure_and_forks_from_json_edit(tmp_path):
     replay = cli("replay", run_id, "--db", db)
     assert replay.returncode == 1
     assert json.loads(replay.stdout)["error"]["type"] == "RecordedFailure"
+
+
+def test_human_demo_output_is_reproducible_despite_unique_trace_ids(tmp_path):
+    first = cli("demo", "--db", str(tmp_path / "first.sqlite"))
+    second = cli("demo", "--db", str(tmp_path / "second.sqlite"))
+    assert first.returncode == second.returncode == 0
+    assert first.stdout == second.stdout

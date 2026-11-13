@@ -231,8 +231,17 @@ async function showDiff(left, right) {
       ["FORK", row.right],
     ]) {
       const pane = node("div", undefined, "diff-pane");
+      const result = step?.error
+        ? `${step.error.type}: ${step.error.message}`
+        : (step?.output?.choices?.[0]?.message?.content ??
+          (step ? json(step.output) : "Not reached"));
       pane.append(
         node("span", label),
+        node(
+          "p",
+          result,
+          `comparison-result${step?.error ? " error-text" : ""}`,
+        ),
         node(
           "pre",
           step
@@ -264,6 +273,7 @@ $("fork-form").addEventListener("submit", (event) => {
   event.preventDefault();
   action(async () => {
     const source = state.detail.run.id;
+    const position = state.step.position;
     const changes =
       state.step.kind === "llm"
         ? {
@@ -276,11 +286,15 @@ $("fork-form").addEventListener("submit", (event) => {
             state_after: JSON.parse($("after-state").value),
           };
     const run = await api(`/api/runs/${source}/fork`, {
-      position: state.step.position,
+      position,
       changes,
     });
     await refresh();
     await selectRun(run.id);
+    const editedStep = state.detail.steps.find(
+      (step) => step.position === position,
+    );
+    if (editedStep) selectStep(editedStep);
     await showDiff(source, run.id);
     if (run.status === "failed")
       notice(

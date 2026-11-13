@@ -69,8 +69,8 @@ def emit(value):
 
 def demo_text(result, store):
     print("replaylab / offline research repair")
-    print(f"Original: {result['original']} / failed at step 4")
-    print(f"Fork:     {result['fork']} / {store.get_run(result['fork'])['status']}")
+    print("Original: failed at step 4")
+    print(f"Fork:     {store.get_run(result['fork'])['status']}")
     print(
         f"Provider calls: original={result['original_provider_calls']}, "
         f"fork={result['fork_provider_calls']}"
