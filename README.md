@@ -2,6 +2,24 @@
 
 Deterministic replay, a content-addressed cache, and SQLite run lineage for Python agents.
 
+## The problem
+
+Agent developers debugging a late failure need to reproduce earlier results without
+repeating paid requests or tool side effects; rerunning against changing inputs can
+produce a different failure.
+
+- [AWS's replay determinism guidance](https://docs.aws.amazon.com/durable-execution/patterns/best-practices/determinism/)
+  explains that code outside durable operations runs again on replay, and that
+  changing random IDs can cause a double charge or an idempotency error
+  (undated; accessed 2026-11-14).
+- [LangGraph's persistence documentation](https://docs.langchain.com/oss/python/langgraph/persistence)
+  identifies failure recovery and time travel as checkpoint use cases, but warns
+  that in-memory checkpoints disappear on restart (undated; accessed 2026-11-14).
+
+Replaylab records JSON boundaries and state in SQLite, verifies and reuses a recorded
+prefix, and forks one changed boundary for comparison; this requires instrumented
+effects and deterministic orchestration, not arbitrary Python process replay.
+
 - Reproduce a failure without repeating earlier tool effects or provider calls.
 - Change one prompt, model, parameter set, or tool result; execute the remaining workflow.
 - Compare the original and fork, including requests, outputs, errors, and state snapshots.
@@ -35,16 +53,6 @@ The mock provider is deterministic and uses synthetic evidence. It is not an LLM
 benchmark. Reusing this database can produce additional suffix cache hits and fewer calls.
 Use `--json` for unique run IDs and machine-readable traces; UUIDs and timestamps are
 metadata, not workflow inputs. There are no stochastic demo decisions to seed.
-
-## The problem
-
-An agent gets most of a run right, then fails. Rerunning everything repeats tool effects,
-pays for the same LLM requests, and makes the failure harder to isolate. Ordinary logs
-show what happened but cannot substitute recorded results back into the application.
-
-Replaylab restarts a trusted workflow, verifies its recorded prefix by position and
-request hash, restores boundary state, and injects cached results. A fork changes one
-boundary without modifying the original. Runs and their parent links stay in SQLite.
 
 ## Quickstart
 
